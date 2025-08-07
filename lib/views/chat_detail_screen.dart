@@ -2,6 +2,7 @@ import 'package:assignment/bloc/message_bloc/message_bloc.dart';
 import 'package:assignment/bloc/message_bloc/message_event.dart';
 import 'package:assignment/bloc/message_bloc/message_state.dart';
 import 'package:assignment/services/socket_service.dart';
+import 'package:assignment/shared_prefrences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -19,12 +20,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _controller = TextEditingController();
 
   String? userId;
-  String chatUserName = 'Chat'; // Default name before loading
-  bool isLoadingUser = true;
+  String chatUserName = 'Chat Detail';
 
   @override
   void initState() {
     super.initState();
+    _initUserAndSocket();
+  }
+
+  Future<void> _initUserAndSocket() async {
+    userId = await UserPrefs.getUserId();
+
+    if (userId == null) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    _socketService.connect(userId!);
+    _socketService.onMessageReceived(context.read<MessageBloc>());
+
+    context.read<MessageBloc>().add(LoadMessages(widget.chatId));
   }
 
   void _sendMessage() {
@@ -67,10 +82,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final message =
-                          messages[messages.length -
-                              1 -
-                              index]; // reverse for latest last
+                      final message = messages[messages.length - 1 - index];
                       final isMe = message.senderId == userId;
 
                       return Container(
@@ -98,10 +110,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                 bottomLeft:
                                     isMe
                                         ? const Radius.circular(12)
-                                        : const Radius.circular(0),
+                                        : Radius.zero,
                                 bottomRight:
                                     isMe
-                                        ? const Radius.circular(0)
+                                        ? Radius.zero
                                         : const Radius.circular(12),
                               ),
                             ),
@@ -125,7 +137,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
           ),
 
-          /// Message Input Field
+          /// Message Input
           Padding(
             padding: const EdgeInsets.all(10),
             child: Row(

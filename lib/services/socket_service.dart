@@ -16,17 +16,17 @@ class SocketService {
     _socket.connect();
 
     _socket.onConnect((_) {
-      print('✅ Socket connected');
+      print(' Socket connected');
       _socket.emit('join', userId);
     });
 
-    _socket.onDisconnect((_) => print('❌ Socket disconnected'));
-    _socket.onError((err) => print('⚠️ Socket error: $err'));
+    _socket.onDisconnect((_) => print(' Socket disconnected'));
+    _socket.onError((err) => print('Socket error: $err'));
   }
 
   /// Send message to server via socket
   void sendMessage(Map<String, dynamic> message) {
-    print('📤 Sending message: $message');
+    print(' Sending message: $message');
     _socket.emit("sendMessage", message);
   }
 
@@ -35,10 +35,10 @@ class SocketService {
     _socket.on('receive_message', (data) {
       try {
         final newMessage = MessageModel.fromJson(data);
-        print('📥 Received message: ${newMessage.content}');
+        print(' Received message: ${newMessage.content}');
         messageBloc.add(NewSocketMessage(newMessage));
       } catch (e) {
-        print('❗ Error parsing socket message: $e');
+        print(' Error parsing socket message: $e');
       }
     });
   }
@@ -49,6 +49,6 @@ class SocketService {
       _socket.disconnect();
     }
     _socket.dispose();
-    print('🛑 Socket disposed');
+    print(' Socket disposed');
   }
 }
